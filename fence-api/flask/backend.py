@@ -1,4 +1,3 @@
-from flask import Flask
 from pymongo import MongoClient
 import math
 
@@ -26,8 +25,8 @@ def update_loc(user_id, new_loc):
 
 	cur_user = users.find_one({"_id": user_id})
 	# check if we're still being hunted; if not, change prey_id to None
-	if not hunted(cur_user["prey_id"]):
-		users.update({"_id":user_id}, {"$set": {"prey_id":None}}, upsert=False)
+	#if not hunted(cur_user["prey_id"]):
+	#	users.update({"_id":user_id}, {"$set": {"prey_id":None}}, upsert=False)
 		# DECREMENTED cur_user.prey_id = None
 
 	# if user is not hunting, search for nearby prey and assign one
@@ -35,7 +34,8 @@ def update_loc(user_id, new_loc):
 		nearby = getNearby(user_id)
 		if nearby is not None:
 			for doc in nearby:
-				if doc["prey_id"] == None:
+				#print(doc["prey_id"], user_id)
+				if doc["prey_id"] is None and doc["_id"] != user_id:
 					# If user does not have a target and a target is near
 					# and that target does not have someone hunting him, return new target Id
 					users.update({"_id":doc["_id"]}, {"$set": {"prey_id":cur_user["_id"]}}, upsert=False)
@@ -46,7 +46,7 @@ def update_loc(user_id, new_loc):
 
 	# end the game if the players get too far apart
 	elif too_far(user_id, cur_user["hunt_id"]):
-		print("executing, motherfucker")
+		# print("executing, motherfucker")
 		users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
 		# DECREMENTED cur_user.hunt_id = None
 		users.update({"_id":cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
@@ -60,6 +60,7 @@ def getNearby(user_id):
 	# DECREMENTED return users.find({"loc": SON([("$near", cur_user["loc"]), ("$maxDistance", 1/138)])})
 
 # determines whether the user assigned to hunt you is still hunting you
+# Decremented
 def hunted(prey_id):
 	if users.find_one({"_id":prey_id}) != None and users.find_one({"_id":prey_id})["hunt_id"] == None:
 		return False
@@ -74,3 +75,5 @@ def too_far(id_1, id_2):
 	if dist > 1/69:
 		return True
 	return False
+
+
