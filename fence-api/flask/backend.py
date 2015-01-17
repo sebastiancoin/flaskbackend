@@ -9,8 +9,8 @@ users = db.users
 def add_user(name, image, loc):
 	user = {"name":name,
 			"image":image,
-			"hunt_id":None,
-			"prey_id":None,
+			"hunt_id":None,		# person user is hunting
+			"prey_id":None,		# person hunting user
 			"loc":loc,
 			"dir":None
 			}
@@ -58,6 +58,12 @@ def getNearby(user_id):
 	# Radius of about 1/2 mile
 	return db.users.find({"loc": {"$within": {"$center": [cur_user["loc"], float(1)/138]}}})
 	# DECREMENTED return users.find({"loc": SON([("$near", cur_user["loc"]), ("$maxDistance", 1/138)])})
+
+# called when user kills his/her target
+def killed(user_id):
+	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
+	cur_user = users.find_one({"_id": user_id})
+	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 
 # determines whether the user assigned to hunt you is still hunting you
 # Decremented get
