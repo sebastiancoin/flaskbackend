@@ -5,7 +5,7 @@ client = MongoClient()
 db = client.assassin
 users = db.users
 
-# adds a user and returns their ObjectID
+# adds a user and returns their ObjectID Post
 def add_user(name, image, loc):
 	user = {"name":name,
 			"image":image,
@@ -18,7 +18,7 @@ def add_user(name, image, loc):
 
 # most important function
 # called whenever a user submits new location data
-# handles processing of game information
+# handles processing of game information Post
 def update_loc(user_id, new_loc):
 	# update user location in the DB
 	users.update({"_id":user_id}, {"$set": {"loc": new_loc}}, upsert=False)
@@ -52,7 +52,7 @@ def update_loc(user_id, new_loc):
 		users.update({"_id":cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 		# DECREMENTED users.find({"_id": user_id}).prey_id = None
 
-# finds users within 1/2 mile
+# finds users within 1/2 mile get
 def getNearby(user_id):
 	cur_user = users.find_one({"_id": user_id})
 	# Radius of about 1/2 mile
@@ -60,13 +60,13 @@ def getNearby(user_id):
 	# DECREMENTED return users.find({"loc": SON([("$near", cur_user["loc"]), ("$maxDistance", 1/138)])})
 
 # determines whether the user assigned to hunt you is still hunting you
-# Decremented
+# Decremented get
 def hunted(prey_id):
 	if users.find_one({"_id":prey_id}) != None and users.find_one({"_id":prey_id})["hunt_id"] == None:
 		return False
 	return True
 
-# determine if the players are too far apart
+# determine if the players are too far apart get
 def too_far(id_1, id_2):
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
@@ -75,5 +75,3 @@ def too_far(id_1, id_2):
 	if dist > 1/69:
 		return True
 	return False
-
-
