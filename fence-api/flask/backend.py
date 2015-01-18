@@ -22,7 +22,7 @@ def add_user():
 			"loc":loc,
 			"dir":None
 			}
-	return users.insert(user)		# unique "_id" field added by default
+	return str(users.insert(user))		# unique "_id" field added by default
 
 # most important function
 # called whenever a user submits new location data
