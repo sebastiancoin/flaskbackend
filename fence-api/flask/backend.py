@@ -63,6 +63,8 @@ def update_loc():
 					# and that target does not have someone hunting him, return new target Id
 					users.update({"_id":doc["_id"]}, {"$set": {"prey_id":cur_user["_id"]}}, upsert=False)
 					users.update({"_id":user_id}, {"$set": {"hunt_id":doc["_id"]}}, upsert=False)
+					hunt = users.find_one(cur_user["hunt_id"])
+					return json.dumps({"hunt_id": cur_user["hunt_id"], "prey_id": cur_user["prey_id"], "hunt_lat":hunt["loc"][0], "hunt_lon":hunt["loc"][1]})
 
 					# DEPRECATED doc.prey_id = cur_user._id
 					# DEPRECATED cur_user.hunt_id = doc._id
@@ -74,7 +76,7 @@ def update_loc():
 		# DEPRECATED cur_user.hunt_id = None
 		users.update({"_id":cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 		# DEPRECATED users.find({"_id": user_id}).prey_id = None
-	return "Success"
+		return json.dumps({"hunt_id": cur_user["hunt_id"], "prey_id": cur_user["prey_id"], "hunt_lat":None, "hunt_lon":None})
 
 def string_to_ObjectId(string):
 	return ObjectId(string)
@@ -118,7 +120,7 @@ def too_far(id_1, id_2):
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
 	dist = math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2)
-	print(dist)
+	#print(dist)
 	if dist > 1/69:
 		return True
 	return False
