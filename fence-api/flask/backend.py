@@ -58,33 +58,13 @@ def update_loc():
 		if nearby is not None:
 			for doc in nearby:
 				# print(doc["prey_id"], user_id)
-				if doc["hunt_id"] == user_id:
-					users.update({"_id":user_id}, {"$set": {"prey_id":doc["_id"]}}, upsert=False)
-					val1 = None
-					if cur_user["prey_id"] is not None:
-						val1 = str(cur_user["prey_id"])
-					val2 = None
-					if cur_user["hunt_id"] is not None:
-						val2 = str(cur_user["hunt_id"])
-					val3 = None
-					val4 = None
-					if val2 is not None:
-						hunt = users.find_one(cur_user["hunt_id"])
-						val3 = hunt["loc"][0]
-						val4 = hunt["loc"][1]
-					return json.dumps({"hunt_id": val2, "prey_id": val1, "hunt_lat":val3, "hunt_lon":val4})
-				elif doc["prey_id"] is None and doc["_id"] != user_id:
+				if doc["prey_id"] is None and doc["_id"] != user_id:
 					# If user does not have a target and a target is near
 					# and that target does not have someone hunting him, return new target Id
 					users.update({"_id":doc["_id"]}, {"$set": {"prey_id":cur_user["_id"]}}, upsert=False)
 					users.update({"_id":user_id}, {"$set": {"hunt_id":doc["_id"]}}, upsert=False)
-					cur_user = users.find_one({"_id": user_id})
 					hunt = users.find_one(cur_user["hunt_id"])
-
-					val = None
-					if cur_user["prey_id"] is not None:
-						val = str(cur_user["prey_id"])
-					return json.dumps({"hunt_id": str(doc["_id"]), "prey_id": val, "hunt_lat":hunt["loc"][0], "hunt_lon":hunt["loc"][1]})
+					return json.dumps({"hunt_id": cur_user["hunt_id"], "prey_id": cur_user["prey_id"], "hunt_lat":hunt["loc"][0], "hunt_lon":hunt["loc"][1]})
 
 					# DEPRECATED doc.prey_id = cur_user._id
 					# DEPRECATED cur_user.hunt_id = doc._id
@@ -96,27 +76,7 @@ def update_loc():
 		# DEPRECATED cur_user.hunt_id = None
 		users.update({"_id":cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 		# DEPRECATED users.find({"_id": user_id}).prey_id = None
-		cur_user = users.find_one({"_id": user_id})
-
-		val1 = None
-		if cur_user["prey_id"] is not None:
-			val = str(cur_user["prey_id"])
-		return json.dumps({"hunt_id": None, "prey_id": val1, "hunt_lat":None, "hunt_lon":None})
-
-	cur_user = users.find_one({"_id": user_id})
-	val1 = None
-	if cur_user["prey_id"] is not None:
-		val = str(cur_user["prey_id"])
-	val2 = None
-	if cur_user["hunt_id"] is not None:
-		val = str(cur_user["hunt_id"])
-	val3 = None
-	val4 = None
-	if val2 is None:
-		hunt = users.find_one(cur_user["hunt_id"])
-		val3 = hunt["loc"][0]
-		val4 = hunt["loc"][1]
-	return json.dumps({"hunt_id": val2, "prey_id": val1, "hunt_lat":val3, "hunt_lon":val4})
+		return json.dumps({"hunt_id": cur_user["hunt_id"], "prey_id": cur_user["prey_id"], "hunt_lat":None, "hunt_lon":None})
 
 def string_to_ObjectId(string):
 	return ObjectId(string)
