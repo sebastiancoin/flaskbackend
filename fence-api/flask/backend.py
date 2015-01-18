@@ -53,7 +53,7 @@ def update_loc():
 		# DEPRECATED cur_user.prey_id = None
 
 	# if user is not hunting, search for nearby prey and assign one
-	if cur_user["hunt_id"] == None:
+	if cur_user["hunt_id"] is None:
 		nearby = getNearby(user_id)
 		if nearby is not None:
 			for doc in nearby:
@@ -100,19 +100,19 @@ def update_loc():
 
 		val1 = None
 		if cur_user["prey_id"] is not None:
-			val = str(cur_user["prey_id"])
+			val1 = str(cur_user["prey_id"])
 		return json.dumps({"hunt_id": None, "prey_id": val1, "hunt_lat":None, "hunt_lon":None})
 
 	cur_user = users.find_one({"_id": user_id})
 	val1 = None
 	if cur_user["prey_id"] is not None:
-		val = str(cur_user["prey_id"])
+		val1 = str(cur_user["prey_id"])
 	val2 = None
 	if cur_user["hunt_id"] is not None:
-		val = str(cur_user["hunt_id"])
+		val2 = str(cur_user["hunt_id"])
 	val3 = None
 	val4 = None
-	if val2 is None:
+	if val2 is not None:
 		hunt = users.find_one(cur_user["hunt_id"])
 		val3 = hunt["loc"][0]
 		val4 = hunt["loc"][1]
@@ -139,6 +139,7 @@ def killed():
 	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
 	cur_user = users.find_one({"_id": user_id})
 	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
+	return "Success"
 
 # determines whether the user assigned to hunt you is still hunting you
 # Deprecated get
@@ -153,15 +154,17 @@ def hunted(prey_id):
 # determine if the players are too far apart get
 #@app.route('/backend/too_far', methods=['GET'])
 def too_far(id_1, id_2):
+	if id_1 is None or id_2 is None:
+		return False
 	#id_1 = request.args.get('id_1')
 	#id_2 = request.args.get('id_2')
 	#id_1 = string_to_ObjectId(id_1)
 	#id_2 = string_to_ObjectId(id_2)
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
-	dist = math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2)
+	dist = math.fabs(math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2))
 	#print(dist)
-	if dist > 1/69:
+	if dist > float(1)/69:
 		return True
 	return False
 
