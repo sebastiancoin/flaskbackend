@@ -8,6 +8,7 @@ db = client.assassin
 users = db.users
 
 # adds a user and returns their ObjectID Post
+@app.route('/backend/add_user?init_name=name&init_image=image&init_loc=loc', methods=['POST'])
 def add_user(name, image, loc):
 	user = {"name":name,
 			"image":image,
@@ -21,6 +22,7 @@ def add_user(name, image, loc):
 # most important function
 # called whenever a user submits new location data
 # handles processing of game information Post
+@app.route('/backend/update_loc?user=user_id&loc=new_loc', methods=['POST'])
 def update_loc(user_id, new_loc):
 	# update user location in the DB
 	users.update({"_id":user_id}, {"$set": {"loc": new_loc}}, upsert=False)
@@ -58,7 +60,7 @@ def string_to_ObjectId(string):
 	return ObjectId(string)
 
 # finds users within 1/2 mile get
-@app.route('/backend/getNearby/<>', methods=['GET'])
+@app.route('/backend/getNearby/<user_id>', methods=['GET'])
 def getNearby(user_id):
 	cur_user = users.find_one({"_id": user_id})
 	# Radius of about 1/2 mile
@@ -66,6 +68,7 @@ def getNearby(user_id):
 	# DECREMENTED return users.find({"loc": SON([("$near", cur_user["loc"]), ("$maxDistance", 1/138)])})
 
 # called when user kills his/her target POST
+@app.route('/backend/killed/<user_id>', methods=['POST'])
 def killed(user_id):
 	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
 	cur_user = users.find_one({"_id": user_id})
@@ -73,14 +76,14 @@ def killed(user_id):
 
 # determines whether the user assigned to hunt you is still hunting you
 # Decremented get
-@app.route('/backend/whetherStillHunted', methods=['GET'])
+@app.route('/backend/whetherStillHunted/<prey_id>', methods=['GET'])
 def hunted(prey_id):
 	if users.find_one({"_id":prey_id}) != None and users.find_one({"_id":prey_id})["hunt_id"] == None:
 		return False
 	return True
 
 # determine if the players are too far apart get
-@app.route('/backend/too_far', methods=['GET'])
+@app.route('/backend/too_far?firstU=id_1&secondU=id_2', methods=['GET'])
 def too_far(id_1, id_2):
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
