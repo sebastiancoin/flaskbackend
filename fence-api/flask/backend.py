@@ -7,14 +7,19 @@ client = MongoClient()
 db = client.assassin
 users = db.users
 
+app = Flask(__name__)
+
 # adds a user and returns their ObjectID Post
 @app.route('/backend/add_user', methods=['POST'])
 def add_user():
+	lat = request.args.get('lat')
+	lon = request.args.get('lon')
+	loc = [lat, lon]
 	user = {"name":request.args.get('name'),
 			"image":request.args.get('image'),
 			"hunt_id":None,		# person user is hunting
 			"prey_id":None,		# person hunting user
-			"loc":request.args.get('loc'),
+			"loc":loc,
 			"dir":None
 			}
 	return users.insert(user)		# unique "_id" field added by default
@@ -25,6 +30,7 @@ def add_user():
 @app.route('/backend/update_loc', methods=['POST'])
 def update_loc():
 	user_id = request.args.get('user_id')
+	user_id = string_to_ObjectId(user_id)
 	lat = request.args.get('lat')
 	lon = request.args.get('lon')
 	new_loc = [lat, lon]
@@ -67,6 +73,7 @@ def string_to_ObjectId(string):
 @app.route('/backend/getNearby', methods=['GET'])
 def getNearby():
 	user_id = request.args.get('user_id')
+	user_id = string_to_ObjectId(user_id)
 	cur_user = users.find_one({"_id": user_id})
 	# Radius of about 1/2 mile
 	return db.users.find({"loc": {"$within": {"$center": [cur_user["loc"], float(1)/138]}}})
@@ -76,6 +83,7 @@ def getNearby():
 @app.route('/backend/killed', methods=['POST'])
 def killed():
 	user_id = request.args.get('user_id')
+	user_id = string_to_ObjectId(user_id)
 	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
 	cur_user = users.find_one({"_id": user_id})
 	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
@@ -85,6 +93,7 @@ def killed():
 @app.route('/backend/whetherStillHunted', methods=['GET'])
 def hunted():
 	prey_id = request.args.get('prey_id')
+	prey_id = string_to_ObjectId(prey_id)
 	if users.find_one({"_id":prey_id}) != None and users.find_one({"_id":prey_id})["hunt_id"] == None:
 		return False
 	return True
@@ -93,7 +102,9 @@ def hunted():
 @app.route('/backend/too_far', methods=['GET'])
 def too_far():
 	id_1 = request.args.get('id_1')
-	ld_2 = request.args.get('id_2')
+	id_2 = request.args.get('id_2')
+	id_1 = string_to_ObjectId(id_1)
+	id_2 = string_to_ObjectId(id_2)
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
 	dist = math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2)
@@ -101,3 +112,7 @@ def too_far():
 	if dist > 1/69:
 		return True
 	return False
+
+if __name__ == '__main__':
+	app.debug = True
+	app.run()
