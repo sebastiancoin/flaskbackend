@@ -8,13 +8,13 @@ db = client.assassin
 users = db.users
 
 # adds a user and returns their ObjectID Post
-@app.route('/backend/add_user?init_name=name&init_image=image&init_loc=loc', methods=['POST'])
-def add_user(name, image, loc):
-	user = {"name":name,
-			"image":image,
+@app.route('/backend/add_user', methods=['POST'])
+def add_user():
+	user = {"name":request.args.get('name'),
+			"image":request.args.get('image'),
 			"hunt_id":None,		# person user is hunting
 			"prey_id":None,		# person hunting user
-			"loc":loc,
+			"loc":request.args.get('loc'),
 			"dir":None
 			}
 	return users.insert(user)		# unique "_id" field added by default
@@ -22,8 +22,12 @@ def add_user(name, image, loc):
 # most important function
 # called whenever a user submits new location data
 # handles processing of game information Post
-@app.route('/backend/update_loc?user=user_id&loc=new_loc', methods=['POST'])
-def update_loc(user_id, new_loc):
+@app.route('/backend/update_loc', methods=['POST'])
+def update_loc():
+	user_id = request.args.get('user_id')
+	lat = request.args.get('lat')
+	lon = request.args.get('lon')
+	new_loc = [lat, lon]
 	# update user location in the DB
 	users.update({"_id":user_id}, {"$set": {"loc": new_loc}}, upsert=False)
 
