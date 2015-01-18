@@ -89,6 +89,8 @@ def hunted(prey_id):
 # determine if the players are too far apart get
 @app.route('/backend/too_far?firstU=id_1&secondU=id_2', methods=['GET'])
 def too_far(id_1, id_2):
+	id_1 = request.args.get('id_1')
+	ld_2 = request.args.get('id_2')
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
 	dist = math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2)
