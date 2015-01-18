@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, abort, url_for, request, make_response
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 import math
 
 client = MongoClient()
@@ -52,6 +53,9 @@ def update_loc(user_id, new_loc):
 		# DECREMENTED cur_user.hunt_id = None
 		users.update({"_id":cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 		# DECREMENTED users.find({"_id": user_id}).prey_id = None
+
+def string_to_ObjectId(string):
+	return ObjectId(string)
 
 # finds users within 1/2 mile get
 @app.route('/backend/getNearby/<>', methods=['GET'])
