@@ -70,10 +70,10 @@ def string_to_ObjectId(string):
 	return ObjectId(string)
 
 # finds users within 1/2 mile get
-@app.route('/backend/getNearby', methods=['GET'])
-def getNearby():
-	user_id = request.args.get('user_id')
-	user_id = string_to_ObjectId(user_id)
+#@app.route('/backend/getNearby', methods=['GET'])
+def getNearby(user_id):
+	#user_id = request.args.get('user_id')
+	#user_id = string_to_ObjectId(user_id)
 	cur_user = users.find_one({"_id": user_id})
 	# Radius of about 1/2 mile
 	return db.users.find({"loc": {"$within": {"$center": [cur_user["loc"], float(1)/138]}}})
@@ -89,22 +89,22 @@ def killed():
 	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
 
 # determines whether the user assigned to hunt you is still hunting you
-# Decremented get
-@app.route('/backend/whetherStillHunted', methods=['GET'])
-def hunted():
-	prey_id = request.args.get('prey_id')
-	prey_id = string_to_ObjectId(prey_id)
+# Deprecated get
+#@app.route('/backend/whetherStillHunted', methods=['GET'])
+def hunted(prey_id):
+	#prey_id = request.args.get('prey_id')
+	#prey_id = string_to_ObjectId(prey_id)
 	if users.find_one({"_id":prey_id}) != None and users.find_one({"_id":prey_id})["hunt_id"] == None:
 		return False
 	return True
 
 # determine if the players are too far apart get
-@app.route('/backend/too_far', methods=['GET'])
-def too_far():
-	id_1 = request.args.get('id_1')
-	id_2 = request.args.get('id_2')
-	id_1 = string_to_ObjectId(id_1)
-	id_2 = string_to_ObjectId(id_2)
+#@app.route('/backend/too_far', methods=['GET'])
+def too_far(id_1, id_2):
+	#id_1 = request.args.get('id_1')
+	#id_2 = request.args.get('id_2')
+	#id_1 = string_to_ObjectId(id_1)
+	#id_2 = string_to_ObjectId(id_2)
 	user1 = users.find_one({"_id": id_1})
 	user2 = users.find_one({"_id": id_2})
 	dist = math.sqrt((user2["loc"][0] - user1["loc"][0])**2 + (user2["loc"][1] - user2["loc"][1])**2)
