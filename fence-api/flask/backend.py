@@ -31,7 +31,7 @@ def get_loc():
 	user_id = request.form.get('user_id')
 	user_id = string_to_ObjectId(user_id)
 	cur_user = users.find_one({"_id": user_id})
-	return json.dumps({"lat":cur_user["lat"], "lon":cur_user["lon"]})
+	return json.dumps({"lat":cur_user["loc"][0], "lon":cur_user["loc"][1]})
 
 # most important function
 # called whenever a user submits new location data
