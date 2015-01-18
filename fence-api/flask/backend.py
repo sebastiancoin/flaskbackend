@@ -3,6 +3,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import math
 import json
+import calendar
+from time import gmtime
+import time
 
 client = MongoClient()
 db = client.assassin
@@ -22,7 +25,9 @@ def add_user():
 			"hunt_id":None,		# person user is hunting
 			"prey_id":None,		# person hunting user
 			"loc":loc,
-			"dir":None
+			"dir":None,
+			"last_connect":int(calendar.timegm(time.gmtime())),
+			"recently_killed":False
 			}
 	return str(users.insert(user))		# unique "_id" field added by default
 
@@ -45,8 +50,17 @@ def update_loc():
 	new_loc = [lat, lon]
 	# update user location in the DB
 	users.update({"_id":user_id}, {"$set": {"loc": new_loc}}, upsert=False)
+	users.update({"_id":user_id}, {"$set": {"last_connect": int(calendar.timegm(time.gmtime()))}}, upsert=False)
 
+	# removes disconnected users
+	users.remove({"last_connect": {"$lt": int(calendar.timegm(time.gmtime()))-300}})
+
+	# Checks if the user needs to be told they were killed
 	cur_user = users.find_one({"_id": user_id})
+	if cur_user["recently_killed"]:
+		users.update({"_id":user_id}, {"$set": {"recently_killed": False}}, upsert=False)
+		return json.dumps({"Life":"DEAD"})
+
 	# check if we're still being hunted; if not, change prey_id to None
 	#if not hunted(cur_user["prey_id"]):
 	#	users.update({"_id":user_id}, {"$set": {"prey_id":None}}, upsert=False)
@@ -136,9 +150,18 @@ def getNearby(user_id):
 def killed():
 	user_id = request.form.get('user_id')
 	user_id = string_to_ObjectId(user_id)
-	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
 	cur_user = users.find_one({"_id": user_id})
+	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"recently_killed":True}}, upsert=False)		# Will notify user of death on next update
+	print(str(user_id) + "   KILLED   " + str(cur_user["hunt_id"]))
 	users.update({"_id": cur_user["hunt_id"]}, {"$set": {"prey_id":None}}, upsert=False)
+	users.update({"_id":user_id}, {"$set": {"hunt_id":None}}, upsert=False)
+	return "Success"
+
+@app.route('/backend/app_closed', methods=['POST'])
+def app_closed():
+	user_id = request.form.get('user_id')
+	user_id = string_to_ObjectId(user_id)
+	users.remove({"_id": user_id})
 	return "Success"
 
 # determines whether the user assigned to hunt you is still hunting you
