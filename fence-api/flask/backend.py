@@ -113,6 +113,11 @@ def too_far():
 		return True
 	return False
 
+# default path
+@app.route('/')
+def index():
+	return "<b>Running</b>"
+
 if __name__ == '__main__':
 	app.debug = True
-	app.run()
+	app.run(port=8000)
